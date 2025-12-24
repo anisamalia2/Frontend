@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthProvider";
 import heroImg from "../assets/images/Group1.png";
 import heroImg2 from "../assets/images/Group2.png";
 import imgMatematika from "../assets/images/materiPopuler/matematika.png";
@@ -7,24 +8,70 @@ import imgBin from "../assets/images/materiPopuler/bin.png";
 import imgPpkn from "../assets/images/materiPopuler/ppkn.png";
 import imgBing from "../assets/images/materiPopuler/bing.png";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const popular = [
-  { id: 1, tag: "Matematika", title: "Pengenalan Konsep Bilangan dan Operasi Hitung", rating: 5, img: imgMatematika },
-  { id: 2, tag: "Bahasa Indonesia", title: "Memahami Teks dan Keterampilan Berbahasa", rating: 5, img: imgBin },
-  { id: 3, tag: "PPKn", title: "Mengenal Nilai-Nilai Pancasila dalam Kehidupan Sehari-hari", rating: 5, img: imgPpkn },
-  { id: 4, tag: "Bahasa Inggris", title: "Basic English: Vocabulary and Daily Conversation", rating: 5, img: imgBing },
+  {
+    id: 1,
+    tag: "Matematika",
+    title: "Pengenalan Konsep Bilangan dan Operasi Hitung",
+    rating: 5,
+    img: imgMatematika,
+  },
+  {
+    id: 2,
+    tag: "Bahasa Indonesia",
+    title: "Memahami Teks dan Keterampilan Berbahasa",
+    rating: 5,
+    img: imgBin,
+  },
+  {
+    id: 3,
+    tag: "PPKn",
+    title: "Mengenal Nilai-Nilai Pancasila dalam Kehidupan Sehari-hari",
+    rating: 5,
+    img: imgPpkn,
+  },
+  {
+    id: 4,
+    tag: "Bahasa Inggris",
+    title: "Basic English: Vocabulary and Daily Conversation",
+    rating: 5,
+    img: imgBing,
+  },
 ];
 
 const features = [
-  { title: "Pendekatan Belajar yang Bikin Paham", desc: "Edutektif menghadirkan pembelajaran yang runtut, mudah diikuti, dan fokus pada pemahaman konsep supaya kamu nggak cuma hafal, tapi benar-benar ngerti." },
-  { title: "Mentor Terpilih dan Berpengalaman", desc: "Materi disusun oleh pengajar berpengalaman yang sudah terbiasa membantu siswa dari berbagai tingkat kemampuan untuk mencapai hasil terbaik." },
-  { title: "Ratusan Materi & Soal Interaktif", desc: "Dilengkapi latihan soal, pembahasan jelas, dan konten multimedia yang membuat belajar jadi lebih menyenangkan dan nggak monoton." },
+  {
+    title: "Pendekatan Belajar yang Bikin Paham",
+    desc: "Edutektif menghadirkan pembelajaran yang runtut, mudah diikuti, dan fokus pada pemahaman konsep supaya kamu nggak cuma hafal, tapi benar-benar ngerti.",
+  },
+  {
+    title: "Mentor Terpilih dan Berpengalaman",
+    desc: "Materi disusun oleh pengajar berpengalaman yang sudah terbiasa membantu siswa dari berbagai tingkat kemampuan untuk mencapai hasil terbaik.",
+  },
+  {
+    title: "Ratusan Materi & Soal Interaktif",
+    desc: "Dilengkapi latihan soal, pembahasan jelas, dan konten multimedia yang membuat belajar jadi lebih menyenangkan dan nggak monoton.",
+  },
 ];
 
 const reviews = [
-  { name: "Alya Putri Ramadhani", role: "SMP Negeri 1 Surabaya", text: "Setelah pakai Edutektif, aku jadi lebih paham. Penjelasannya jelas banget!" },
-  { name: "Rina Wulandari", role: "Guru Matematika", text: "Materi sangat membantu saya mempersiapkan pembelajaran harian." },
-  { name: "Rafi Pratama", role: "SMA Negeri 2 Surabaya", text: "Latihan soalnya lengkap dan pembahasan jelas." },
+  {
+    name: "Alya Putri Ramadhani",
+    role: "SMP Negeri 1 Surabaya",
+    text: "Setelah pakai Edutektif, aku jadi lebih paham. Penjelasannya jelas banget!",
+  },
+  {
+    name: "Rina Wulandari",
+    role: "Guru Matematika",
+    text: "Materi sangat membantu saya mempersiapkan pembelajaran harian.",
+  },
+  {
+    name: "Rafi Pratama",
+    role: "SMA Negeri 2 Surabaya",
+    text: "Latihan soalnya lengkap dan pembahasan jelas.",
+  },
 ];
 
 const plans = [
@@ -37,20 +84,31 @@ const plans = [
 
 // Mapping kategori ke slug URL
 const categoryMap = {
-  "Matematika": "matematika",
+  Matematika: "matematika",
   "Bahasa Indonesia": "bahasa-indonesia",
-  "PPKn": "ppkn",
+  PPKn: "ppkn",
   "Bahasa Inggris": "bahasa-inggris",
-  "IPA": "ipa",
-  "IPS": "ips",
-  "Ekonomi": "ekonomi",
+  IPA: "ipa",
+  IPS: "ips",
+  Ekonomi: "ekonomi",
   "Seni Budaya": "seni-budaya",
 };
 
-export default function Dashboard() {
+export default function Home() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isNavbarVisible, setIsNavbarVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      if (user.role === "siswa") {
+        navigate("/dashboard-siswa", { replace: true });
+      } else if (user.role === "guru") {
+        navigate("/dashboard-guru", { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -78,7 +136,12 @@ export default function Dashboard() {
     return (
       <div className="flex items-center gap-1">
         {[...Array(5)].map((_, i) => (
-          <span key={i} className={i < rating ? "text-yellow-400 text-lg" : "text-gray-300 text-lg"}>
+          <span
+            key={i}
+            className={
+              i < rating ? "text-yellow-400 text-lg" : "text-gray-300 text-lg"
+            }
+          >
             ★
           </span>
         ))}
@@ -92,26 +155,34 @@ export default function Dashboard() {
       <Navbar isNavbarVisible={isNavbarVisible} />
       <main className="font-poppins">
         {/* ===== HERO SECTION ===== */}
-        <section className="bg-white py-12 md:py-20 md:h-[600px]">
+        <section className="bg-white py-12 md:py-32 md:h-[700px]">
           <div className="max-w-7xl mx-auto px-6 md:px-20 flex flex-col-reverse md:flex-row items-center gap-12">
             <div className="flex-1">
               <h1 className="text-5xl md:text-5xl font-extrabold leading-[68px] tracking-tight text-slate-900">
-                Belajar Lebih  
+                Belajar Lebih
                 <br /> Gampang, Hasil Lebih
                 <br /> Maksimal
               </h1>
               <p className="mt-6 text-slate-black max-w-xl text-[15px]">
-                Pelajari apa pun dengan cara yang mudah dipahami melalui video menarik, latihan interaktif, dan panduan belajar yang disesuaikan untuk Anda.
+                Pelajari apa pun dengan cara yang mudah dipahami melalui video
+                menarik, latihan interaktif, dan panduan belajar yang
+                disesuaikan untuk Anda.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <button 
+                <button
                   type="button"
-                  onClick={() => navigate("/latihan-soal")}
+                  onClick={() => {
+                    if (user) {
+                      navigate("/latihan-soal");
+                    } else {
+                      navigate("/login");
+                    }
+                  }}
                   className="w-full sm:w-auto bg-edubiru text-white px-8 py-2.5 rounded-xl font-semibold hover:bg-edubiru-900 transition shadow-lg"
                 >
                   Mulai Belajar
                 </button>
-                <button 
+                <button
                   type="button"
                   onClick={() => navigate("/materi")}
                   className="w-full sm:w-auto bg-white border-2 border-slate-800 text-slate-800 px-8 py-2.5 rounded-xl font-semibold hover:bg-edubiru hover:text-white transition shadow-lg"
@@ -133,7 +204,9 @@ export default function Dashboard() {
         {/* ===== POPULAR MATERI SECTION ===== */}
         <section className="bg-edubiru text-white py-16 md:py-20">
           <div className="max-w-7xl mx-auto px-6 md:px-20">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Materi Populer</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+              Materi Populer
+            </h2>
             <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
               {popular.map((p) => (
                 <article
@@ -141,7 +214,11 @@ export default function Dashboard() {
                   className="bg-white text-slate-900 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl hover:scale-105 transition duration-300 flex flex-col"
                 >
                   <div className="relative h-44 bg-slate-200">
-                    <img src={p.img} alt={p.title} className="w-full h-full object-cover" />
+                    <img
+                      src={p.img}
+                      alt={p.title}
+                      className="w-full h-full object-cover"
+                    />
                     <span className="absolute left-4 top-4 bg-yellow-400 text-slate-900 text-xs font-bold px-3 py-1 rounded-md">
                       {p.tag}
                     </span>
@@ -158,12 +235,10 @@ export default function Dashboard() {
                         Kelas 5-6
                       </div>
 
-                      <div>
-                        {renderStars(p.rating)}
-                      </div>
+                      <div>{renderStars(p.rating)}</div>
                     </div>
 
-                    <button 
+                    <button
                       type="button"
                       onClick={() => navigate("/materi")}
                       className="w-full bg-white text-slate-900 py-2 rounded-lg text-sm font-bold hover:bg-edubiru-900 transition border border-edubiru-900 hover:text-white"
@@ -180,9 +255,12 @@ export default function Dashboard() {
         {/* ===== FEATURES SECTION ===== */}
         <section className="py-16 md:py-24 bg-white relative">
           <div className="max-w-7xl mx-auto px-6 md:px-20 text-center relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">Kenapa harus belajar di Edutektif?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
+              Kenapa harus belajar di Edutektif?
+            </h2>
             <p className="text-slate-600 max-w-2xl mx-auto text-lg mb-12">
-              Belajar lebih mudah, lebih interaktif, dan lebih seru dengan materi yang dirancang untuk bikin kamu cepat paham!
+              Belajar lebih mudah, lebih interaktif, dan lebih seru dengan
+              materi yang dirancang untuk bikin kamu cepat paham!
             </p>
             <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
               {features.map((f, i) => (
@@ -190,8 +268,12 @@ export default function Dashboard() {
                   key={i}
                   className="bg-yellow-400 text-slate-900 p-8 rounded-2xl shadow-lg hover:shadow-xl transition duration-300"
                 >
-                  <h4 className="font-bold text-lg md:text-xl mb-4">{f.title}</h4>
-                  <p className="text-sm md:text-base leading-relaxed">{f.desc}</p>
+                  <h4 className="font-bold text-lg md:text-xl mb-4">
+                    {f.title}
+                  </h4>
+                  <p className="text-sm md:text-base leading-relaxed">
+                    {f.desc}
+                  </p>
                 </div>
               ))}
             </div>
@@ -213,10 +295,12 @@ export default function Dashboard() {
                 Untuk semua pelajar, semua jenjang. Dampak yang nyata.
               </h2>
               <p className="text-slate-600 text-lg mb-8 leading-relaxed">
-                Edutektif hadir dengan misi membuka akses belajar berkualitas untuk siapa saja, di mana saja agar setiap siswa bisa berkembang dengan percaya diri.
+                Edutektif hadir dengan misi membuka akses belajar berkualitas
+                untuk siapa saja, di mana saja agar setiap siswa bisa berkembang
+                dengan percaya diri.
               </p>
               <div className="flex gap-4">
-                <button 
+                <button
                   type="button"
                   onClick={() => navigate("/login")}
                   className="bg-edubiru text-white px-10 py-2 rounded-lg font-semibold hover:bg-edubiru-900 transition shadow-lg"
@@ -231,8 +315,12 @@ export default function Dashboard() {
         {/* ===== REVIEWS SECTION ===== */}
         <section className="bg-edubiru text-white py-16 md:py-20">
           <div className="max-w-7xl mx-auto px-6 md:px-20 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Jejak kesan dari para pengguna Edutektif</h2>
-            <p className="text-edubiru-100 mb-12">Ribuan siswa dan guru telah merasakan manfaat Edutektif</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Jejak kesan dari para pengguna Edutektif
+            </h2>
+            <p className="text-edubiru-100 mb-12">
+              Ribuan siswa dan guru telah merasakan manfaat Edutektif
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {reviews.map((r, i) => (
                 <div
@@ -248,7 +336,9 @@ export default function Dashboard() {
                       <div className="text-xs text-slate-500">{r.role}</div>
                     </div>
                   </div>
-                  <p className="text-slate-700 text-sm leading-relaxed">{r.text}</p>
+                  <p className="text-slate-700 text-sm leading-relaxed">
+                    {r.text}
+                  </p>
                 </div>
               ))}
             </div>
@@ -258,20 +348,40 @@ export default function Dashboard() {
         {/* ===== PRICING SECTION ===== */}
         <section className="py-16 md:py-24 bg-white">
           <div className="max-w-7xl mx-auto px-6 md:px-20 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Tingkatkan Cara Belajarmu Hari Ini</h2>
-            <p className="text-slate-600 text-lg mb-12">Pilih paket yang sesuai dengan kebutuhan belajarmu</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Tingkatkan Cara Belajarmu Hari Ini
+            </h2>
+            <p className="text-slate-600 text-lg mb-12">
+              Pilih paket yang sesuai dengan kebutuhan belajarmu
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               {plans.map((p, i) => (
                 <div
                   key={i}
                   className="bg-white border-2 border-slate-200 rounded-xl shadow-lg p-6 hover:border-yellow-400 hover:shadow-2xl hover:scale-105 transition duration-300"
                 >
-                  <div className="text-sm font-medium text-slate-500 mb-3">Paket {p.months} Bulan</div>
-                  <div className="text-3xl font-bold text-slate-900 mb-2">{p.price}</div>
-                  <div className="text-xs font-semibold text-yellow-600 mb-6 bg-yellow-100 py-1 rounded">{p.note}</div>
-                  <button 
+                  <div className="text-sm font-medium text-slate-500 mb-3">
+                    Paket {p.months} Bulan
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900 mb-2">
+                    {p.price}
+                  </div>
+                  <div className="text-xs font-semibold text-yellow-600 mb-6 bg-yellow-100 py-1 rounded">
+                    {p.note}
+                  </div>
+                  <button
                     type="button"
-                    onClick={() => navigate(`/pembayaran?months=${p.months}&price=${encodeURIComponent(p.price)}`)}
+                    onClick={() => {
+                      if (user) {
+                        navigate(
+                          `/pembayaran?months=${
+                            p.months
+                          }&price=${encodeURIComponent(p.price)}`
+                        );
+                      } else {
+                        navigate("/login");
+                      }
+                    }}
                     className="w-full bg-yellow-400 text-slate-900 py-3 rounded-lg font-bold hover:bg-yellow-500 transition shadow-md"
                   >
                     Pilih Paket
@@ -282,54 +392,7 @@ export default function Dashboard() {
           </div>
         </section>
       </main>
-
-      {/* ===== FOOTER ===== */}
-      <footer className="bg-edubiru text-white">
-        <div className="max-w-7xl mx-auto px-6 md:px-20 py-14">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
-            <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="text-3xl font-extrabold">EDUTEKTIF</div>
-              </div>
-              <p className="text-sm text-edubiru-100 max-w-md leading-relaxed">
-                Kami percaya setiap orang berhak mendapatkan pendidikan bermutu, dan kami berusaha mewujudkannya untuk siapa saja, di mana saja.
-              </p>
-            </div>
-
-            <nav aria-label="Sosial Media" className="text-sm">
-              <h4 className="font-semibold mb-3">Sosial Media</h4>
-              <ul className="space-y-2 text-edubiru-100">
-                <li><a href="#" className="hover:underline">Instagram</a></li>
-                <li><a href="#" className="hover:underline">WhatsApp</a></li>
-                <li><a href="#" className="hover:underline">YouTube</a></li>
-                <li><a href="#" className="hover:underline">TikTok</a></li>
-              </ul>
-            </nav>
-
-            <nav aria-label="Company" className="text-sm">
-              <h4 className="font-semibold mb-3">Company</h4>
-              <ul className="space-y-2 text-edubiru-100">
-                <li><a href="#" className="hover:underline">Kontak Kami</a></li>
-                <li><a href="#" className="hover:underline">Tentang Kami</a></li>
-                <li><a href="#" className="hover:underline">Testimoni</a></li>
-              </ul>
-            </nav>
-
-            <nav aria-label="Bantuan & Panduan" className="text-sm">
-              <h4 className="font-semibold mb-3">Bantuan & Panduan</h4>
-              <ul className="space-y-2 text-edubiru-100">
-                <li><a href="#" className="hover:underline">Kebijakan Privasi</a></li>
-                <li><a href="#" className="hover:underline">Ketentuan Penggunaan</a></li>
-                <li><a href="#" className="hover:underline">Bantuan</a></li>
-              </ul>
-            </nav>
-          </div>
-
-          <div className="mt-8 border-t border-white/10 pt-6 text-center">
-            <p className="text-sm text-edubiru-100">©2025 Edutektif. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

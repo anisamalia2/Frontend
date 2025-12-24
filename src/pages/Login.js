@@ -1,11 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LogRes from "../assets/images/LogRes.png";
 import { useAuth } from "../contexts/AuthProvider";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { user, login } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      const role = user.role?.toUpperCase();
+      if (role === "SISWA") navigate("/dashboard-siswa", { replace: true });
+      else if (role === "GURU") navigate("/dashboard-guru", { replace: true });
+      else navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+
   const [nomorWhatsapp, setNomorWhatsapp] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -16,16 +26,27 @@ export default function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
-      const res = await login({ nomor_whatsapp: nomorWhatsapp, password });
+      const res = await login({
+        nomor_whatsapp: nomorWhatsapp,
+        password,
+      });
+
       if (res.ok) {
-        // optional: show success message
-        navigate("/");
+        const role = res.user?.role?.toUpperCase(); // 🔥 ambil role dan pastikan uppercase
+        if (role === "SISWA") {
+          navigate("/dashboard-siswa", { replace: true }); // redirect siswa
+        } else if (role === "GURU") {
+          navigate("/dashboard-guru", { replace: true }); // redirect guru
+        } else {
+          navigate("/"); // fallback
+        }
       } else {
         setError(res.error?.message || "Login gagal. Cek kredensial.");
       }
     } catch (err) {
-      setError(err.message || "Login gagal");
+      setError("Login gagal");
     } finally {
       setLoading(false);
     }
@@ -35,17 +56,16 @@ export default function Login() {
     <div className="min-h-screen flex font-poppins">
       {/* ===== LEFT SECTION - WHITE BACKGROUND ===== */}
       <div className="hidden lg:flex w-1/2 bg-white flex-col items-center justify-center text-center p-8">
-        {/* Logo */}
         <div className="mb-12 flex items-center justify-center gap-2">
-          <span className="text-3xl font-extrabold text-[#063E6A]">EDUTEKTIF</span>
+          <span className="text-3xl font-extrabold text-[#063E6A]">
+            EDUTEKTIF
+          </span>
         </div>
 
-        {/* Heading */}
         <h2 className="text-4xl md:text-1xl font-bold text-[#063E6A] mb-12 leading-tight max-w-md">
           Senang bertemu lagi! Masuk untuk melanjutkan proses belajarmu.
         </h2>
 
-        {/* Illustration Image (reduced size) */}
         <div className="w-full max-w-xs h-64 sm:h-72 flex items-center justify-center">
           <img
             src={LogRes}
@@ -58,7 +78,6 @@ export default function Login() {
       {/* ===== RIGHT SECTION - BLUE BACKGROUND ===== */}
       <div className="w-full lg:w-1/2 bg-gradient-to-r from-[#0F5A8C] to-[#063E6A] flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 md:p-10 border-2 border-slate-100">
-          {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-[#063E6A] mb-2">
               Login
@@ -75,14 +94,13 @@ export default function Login() {
             </p>
           </div>
 
-          {/* Form */}
-          {/* Error message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+              {error}
+            </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-6">
-            {/* Username Input */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Nomor WhatsApp
@@ -97,7 +115,6 @@ export default function Login() {
               />
             </div>
 
-            {/* Password Input */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Password
@@ -121,7 +138,6 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -139,16 +155,16 @@ export default function Login() {
               </button>
             </div>
 
-            {/* Terms & Conditions */}
             <p className="text-xs text-slate-600 text-center">
-              Dengan menggunakan layanan Bicarakan.id kamu menyetujui{" "}
-              <a href="#" className="text-blue-600 font-semibold hover:underline">
+              Dengan menggunakan layanan Edutektif kamu menyetujui{" "}
+              <a
+                href="#"
+                className="text-blue-600 font-semibold hover:underline"
+              >
                 Kebijakan Privasi
-              </a>{" "}
-              dari layanan kami
+              </a>
             </p>
 
-            {/* Login Button */}
             <button
               type="submit"
               disabled={loading}

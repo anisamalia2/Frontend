@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useAuth } from "../contexts/AuthProvider";
 import LogRes from "../assets/images/LogRes.png";
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register, loading } = useAuth();
+
   const [formData, setFormData] = useState({
     username: "",
     nomor_whatsapp: "",
@@ -12,9 +14,9 @@ export default function Register() {
     confirmPassword: "",
     role: "SISWA",
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -31,58 +33,38 @@ export default function Register() {
     e.preventDefault();
     setError("");
     setSuccess("");
-    setLoading(true);
 
-    // Validasi
+    // ===== VALIDASI =====
     if (!formData.username || !formData.nomor_whatsapp || !formData.password) {
       setError("Semua field harus diisi!");
-      setLoading(false);
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       setError("Password dan konfirmasi password tidak cocok!");
-      setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
       setError("Password minimal 6 karakter!");
-      setLoading(false);
       return;
     }
 
-    try {
-      const apiBaseUrl = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000";
-      const apiUrl = `${apiBaseUrl}/auth/register`;
+    // ===== REGISTER VIA CONTEXT =====
+    const res = await register({
+      username: formData.username,
+      nomor_whatsapp: formData.nomor_whatsapp,
+      password: formData.password,
+      role: formData.role,
+    });
 
-      console.log("API Base URL:", apiBaseUrl);
-      console.log("Full Request URL:", apiUrl);
-
-      const response = await axios.post(apiUrl, {
-        username: formData.username,
-        nomor_whatsapp: formData.nomor_whatsapp,
-        password: formData.password,
-        role: formData.role,
-      });
-
+    if (res.ok) {
       setSuccess("Registrasi berhasil! Redirecting...");
-      console.log("Register response:", response.data);
-
-      // Simpan user info
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-
-      // Redirect ke login
       setTimeout(() => {
         navigate("/login");
       }, 1500);
-    } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || err.message || "Registrasi gagal. Coba lagi!";
-      setError(errorMessage);
-      console.error("Register error:", err);
-    } finally {
-      setLoading(false);
+    } else {
+      setError(res.error);
     }
   };
 
@@ -124,7 +106,7 @@ export default function Register() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username Input */}
+            {/* Username */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Username
@@ -140,7 +122,7 @@ export default function Register() {
               />
             </div>
 
-            {/* WhatsApp Input */}
+            {/* WhatsApp */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Nomor WhatsApp
@@ -157,22 +139,28 @@ export default function Register() {
             </div>
 
             {/* Role */}
-            <div>
+            <div className="relative w-full">
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Peran
               </label>
+
               <select
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:border-blue-600 transition"
+                className="w-full appearance-none px-4 py-3 border-2 border-slate-300 rounded-lg focus:outline-none focus:border-blue-600 transition bg-white"
               >
                 <option value="SISWA">Siswa</option>
                 <option value="GURU">Guru</option>
               </select>
+
+              {/* Icon panah custom */}
+              <span className="pointer-events-none absolute right-4 top-[58%] text-slate-500">
+                ▼
+              </span>
             </div>
 
-            {/* Password Input */}
+            {/* Password */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Password
@@ -197,7 +185,7 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Confirm Password Input */}
+            {/* Confirm Password */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
                 Konfirmasi Password
@@ -222,16 +210,19 @@ export default function Register() {
               </div>
             </div>
 
-            {/* Terms & Conditions */}
+            {/* Terms */}
             <p className="text-xs text-slate-600 text-center">
               Dengan menggunakan layanan Edutektif kamu menyetujui{" "}
-              <a href="#" className="text-blue-600 font-semibold hover:underline">
+              <a
+                href="#"
+                className="text-blue-600 font-semibold hover:underline"
+              >
                 Kebijakan Privasi
               </a>{" "}
               dari layanan kami
             </p>
 
-            {/* Register Button */}
+            {/* Submit */}
             <button
               type="submit"
               disabled={loading}
@@ -243,19 +234,19 @@ export default function Register() {
         </div>
       </div>
 
-      {/* ===== RIGHT SECTION - WHITE BACKGROUND ===== */}
+      {/* ===== RIGHT SECTION ===== */}
       <div className="hidden lg:flex w-1/2 bg-white flex-col items-center justify-center text-center p-8">
-        {/* Logo */}
         <div className="mb-12 flex items-center justify-center gap-2">
-          <span className="text-3xl font-extrabold text-[#063E6A]">EDUTEKTIF</span>
+          <span className="text-3xl font-extrabold text-[#063E6A]">
+            EDUTEKTIF
+          </span>
         </div>
 
-        {/* Heading */}
         <h2 className="text-4xl md:text-5xl font-bold text-[#063E6A] mb-12 leading-tight max-w-md">
-          Setiap langkah kecil membuka peluang besar. Yuk daftar dan mulai belajar hari ini!
+          Setiap langkah kecil membuka peluang besar. Yuk daftar dan mulai
+          belajar hari ini!
         </h2>
 
-        {/* Illustration Image (match Login sizing) */}
         <div className="w-full max-w-xs h-64 sm:h-72 flex items-center justify-center">
           <img
             src={LogRes}
