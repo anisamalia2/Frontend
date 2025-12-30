@@ -32,8 +32,9 @@ export default function DetailLatSoal() {
     fetchQuiz();
   }, [id]);
 
-  if (loading) return <p className="p-6">Memuat...</p>;
-  if (!quiz) return <p className="p-6">Quiz tidak ditemukan</p>;
+  if (loading) return <p className="p-6 pt-32 text-center">Memuat...</p>;
+  if (!quiz)
+    return <p className="p-6 pt-32 text-center">Quiz tidak ditemukan</p>;
 
   const soal = quiz.soal[currentIndex];
   const totalSoal = quiz.soal.length;
@@ -43,34 +44,17 @@ export default function DetailLatSoal() {
     setAnswers((prev) => ({ ...prev, [soalId]: key }));
   };
 
-  const handleSubmit = async () => {
-    try {
-      const payload = {
-        jawaban: Object.entries(answers).map(([soal_id, opsi]) => ({
-          soal_id: Number(soal_id),
-          jawaban: opsi,
-        })),
-      };
-
-      await api.post(`/api/quiz/${id}/submit`, payload);
-
-      navigate(`/hasil-latihan/${id}`);
-    } catch (err) {
-      alert("Gagal submit jawaban");
-      console.error(err);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-50">
       <Topbar title="Soal" />
 
-      <main className="max-w-4xl mx-auto px-6 md:px-20 py-10">
+      {/* PERUBAHAN: Padding diubah menjadi pt-32 pb-20 agar pas */}
+      <main className="max-w-4xl mx-auto px-6 md:px-20 pt-32 pb-20">
         {/* ================= JUDUL ================= */}
         <h1 className="text-2xl font-bold mb-6">{quiz.judul}</h1>
 
         {/* ================= NAV SOAL ================= */}
-        <div className="flex gap-2 overflow-x-auto mb-4">
+        <div className="flex gap-2 overflow-x-auto mb-4 pb-2">
           {quiz.soal.map((_, idx) => (
             <button
               key={idx}
@@ -126,19 +110,26 @@ export default function DetailLatSoal() {
 
           {/* ================= NAV BUTTON ================= */}
           <div className="flex justify-between mt-10">
+            {/* PERUBAHAN: Logika Tombol Kiri (Batal / Sebelumnya) */}
             <button
-              disabled={currentIndex === 0}
-              onClick={() => setCurrentIndex((i) => i - 1)}
-              className={`px-6 py-2 rounded-lg font-semibold
-    ${
-      currentIndex === 0
-        ? "bg-slate-300 text-slate-600 cursor-not-allowed"
-        : "bg-edubiru text-white hover:bg-edubiru/90"
-    }`}
+              onClick={() => {
+                if (currentIndex === 0) {
+                  navigate("/latihan-soal"); // Kembali ke daftar soal (Batal)
+                } else {
+                  setCurrentIndex((i) => i - 1); // Mundur satu soal
+                }
+              }}
+              className={`px-6 py-2 rounded-lg font-semibold transition
+                ${
+                  currentIndex === 0
+                    ? "bg-slate-200 text-slate-700 hover:bg-slate-300" // Style Batal (Abu-abu aktif)
+                    : "bg-edubiru text-white hover:bg-edubiru/90" // Style Sebelumnya (Biru)
+                }`}
             >
-              Soal Sebelumnya
+              {currentIndex === 0 ? "Batal" : "Soal Sebelumnya"}
             </button>
 
+            {/* Tombol Kanan (Tetap sama) */}
             <button
               onClick={async () => {
                 if (currentIndex === totalSoal - 1) {
@@ -168,7 +159,7 @@ export default function DetailLatSoal() {
                   setCurrentIndex((i) => i + 1);
                 }
               }}
-              className="px-6 py-2 rounded-lg bg-yellow-400 text-black font-semibold"
+              className="px-6 py-2 rounded-lg bg-yellow-400 text-black font-semibold hover:bg-yellow-500 transition"
             >
               {currentIndex === totalSoal - 1 ? "Selesai" : "Soal Selanjutnya"}
             </button>

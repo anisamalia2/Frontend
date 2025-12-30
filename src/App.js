@@ -10,6 +10,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Kontak from "./pages/Kontak";
 import Testi from "./pages/Testi";
+import ForgotPassword from "./pages/ForgotPassword";
+import EditProfile from "./pages/EditProfile";
 
 import MateriBin from "./pages/MateriSiswa";
 import LatSoalBin from "./pages/LatSoalSiswa";
@@ -37,6 +39,15 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/kontak" element={<Kontak />} />
           <Route path="/testimoni" element={<Testi />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/edit-profile"
+            element={
+              <ProtectedRoute>
+                <EditProfile />
+              </ProtectedRoute>
+            }
+          />
 
           {/* ===== SISWA ===== */}
           <Route
@@ -59,15 +70,6 @@ function App() {
 
           <Route
             path="/pembayaran/:id"
-            element={
-              <ProtectedRoute allowedRoles={["SISWA"]}>
-                <PembayaranSiswa />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/pembayaran/:id/qr"
             element={
               <ProtectedRoute allowedRoles={["SISWA"]}>
                 <PembayaranSiswa />
@@ -121,7 +123,7 @@ function App() {
           <Route
             path="/detail-latihan-soal/:id"
             element={
-              <ProtectedRoute allowedRoles={["SISWA"]}>
+              <ProtectedRoute allowedRoles={["SISWA", "GURU"]}>
                 <DetailLatSoal />
               </ProtectedRoute>
             }

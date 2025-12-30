@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
+import { CheckCircle, Zap } from "lucide-react"; // Opsional: Ikon pelengkap
 
 export default function PaketSiswa() {
   const [paket, setPaket] = useState([]);
@@ -10,79 +11,119 @@ export default function PaketSiswa() {
 
   useEffect(() => {
     const fetchPaket = async () => {
-      const res = await api.get("/api/paket");
-      setPaket(res.data.data);
+      try {
+        const res = await api.get("/api/paket");
+        setPaket(res.data.data || res.data); // Handle kemungkinan format response
+      } catch (error) {
+        console.error("Gagal memuat paket:", error);
+      }
     };
     fetchPaket();
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 font-poppins text-slate-900">
       <Topbar title="Paket Bulanan" />
 
-      <main className="max-w-6xl mx-auto px-6 py-32">
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-4">
-          Upgrade Akses Belajarmu
-        </h1>
+      {/* Padding disesuaikan: pt-32 (atas), pb-20 (bawah), px responsive */}
+      <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-20 pt-32 pb-20">
+        {/* ===== HEADER SECTION ===== */}
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <h1 className="text-3xl md:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">
+            Upgrade Akses Belajarmu
+          </h1>
+          <p className="text-slate-500 text-base md:text-lg leading-relaxed">
+            Pilih paket belajar terbaik untuk membuka seluruh materi dan latihan
+            soal tanpa batas. Investasi terbaik untuk masa depanmu.
+          </p>
+        </div>
 
-        <p className="text-slate-600 text-lg text-center mb-12">
-          Pilih paket belajar untuk membuka seluruh materi dan latihan soal
-          tanpa batas.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        {/* ===== GRID PAKET ===== */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {paket.map((p) => (
             <div
               key={p.id}
               className="
+                group
                 bg-white
-                border-2 border-slate-200
-                rounded-xl
-                shadow-lg
+                border border-slate-200
+                rounded-3xl
+                shadow-lg hover:shadow-2xl
+                hover:-translate-y-2
                 p-8
+                flex flex-col
+                items-center
                 text-center
-                hover:border-yellow-400
-                hover:shadow-2xl
-                hover:scale-105
-                transition
+                transition-all
                 duration-300
+                relative
+                overflow-hidden
               "
             >
-              {/* Label paket */}
-              <div className="text-sm font-medium text-slate-500 mb-3">
-                Paket {p.duration_months} Bulan
+              {/* Dekorasi Hover Border */}
+              <div className="absolute inset-0 border-2 border-transparent group-hover:border-yellow-400 rounded-3xl transition-all duration-300 pointer-events-none"></div>
+
+              {/* Ikon / Header Kecil */}
+              <div className="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mb-4">
+                <Zap size={24} fill="currentColor" />
               </div>
+
+              {/* Nama Paket */}
+              <h3 className="text-lg font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Paket {p.duration_months} Bulan
+              </h3>
 
               {/* Harga */}
-              <div className="text-3xl font-bold mb-4">
-                Rp {p.harga.toLocaleString("id-ID")}
+              <div className="flex items-baseline justify-center gap-1 mb-6">
+                <span className="text-sm font-semibold text-slate-400">Rp</span>
+                <span className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+                  {p.harga.toLocaleString("id-ID")}
+                </span>
               </div>
 
-              {/* Note */}
-              <div className="text-xs font-semibold text-yellow-600 mb-6 bg-yellow-100 py-1.5 rounded">
-                Akses penuh semua materi
+              {/* Garis Pemisah */}
+              <div className="w-full h-px bg-slate-100 mb-6"></div>
+
+              {/* Benefit / Note */}
+              <div className="mb-8 w-full">
+                <div className="flex items-center gap-3 text-left bg-slate-50 p-3 rounded-xl border border-slate-100">
+                  <CheckCircle
+                    className="text-green-500 flex-shrink-0"
+                    size={20}
+                  />
+                  <span className="text-sm font-semibold text-slate-700">
+                    Akses penuh semua materi & soal
+                  </span>
+                </div>
               </div>
 
-              {/* Button */}
+              {/* Button (Pushed to bottom) */}
               <button
                 onClick={() => navigate(`/pembayaran/${p.id}`)}
                 className="
+                  mt-auto
                   w-full
                   bg-yellow-400
-                  text-black
-                  py-3
-                  rounded-lg
+                  text-slate-900
+                  py-3.5
+                  rounded-xl
                   font-bold
+                  shadow-md
+                  shadow-yellow-400/20
                   hover:bg-yellow-500
-                  transition
+                  hover:shadow-lg
+                  active:scale-95
+                  transition-all
+                  duration-200
                 "
               >
-                Pilih Paket
+                Pilih Paket Ini
               </button>
             </div>
           ))}
         </div>
       </main>
+
       <Footer />
     </div>
   );

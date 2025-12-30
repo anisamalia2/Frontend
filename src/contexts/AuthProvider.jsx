@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import api, { setAuthToken } from "../utils/api";
+import api from "../utils/api";
 
 const AuthContext = createContext();
 
@@ -7,30 +7,48 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // FUNGSI BARU: Ambil data user terbaru dari server
+  const fetchMe = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const res = await api.get("/api/users/me");
+      // Sesuaikan response backend (res.data.data atau res.data)
+      const userData = res.data.data || res.data;
+
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+    } catch (err) {
+      console.error("Gagal mengambil data user terbaru:", err);
+      if (err.response && err.response.status === 401) {
+        logout(); // Token expired
+      }
+    }
+  };
+
   // ===== CEK LOGIN SAAT REFRESH =====
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userData = localStorage.getItem("user");
-
-    if (token && userData) {
-      setAuthToken(token);
-      setUser(JSON.parse(userData));
-    }
-
-    setLoading(false);
+    const initAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        // Panggil fetchMe() agar data selalu fresh saat refresh
+        await fetchMe();
+      }
+      setLoading(false);
+    };
+    initAuth();
   }, []);
 
   // ===== LOGIN =====
   const login = async (payload) => {
     try {
       setLoading(true);
-
       const res = await api.post("/api/auth/login", payload);
-      const { token, user } = res.data;
+      const { token, user } = res.data.data || res.data;
 
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
-      setAuthToken(token);
       setUser(user);
 
       return { ok: true, user };
@@ -44,13 +62,11 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // ===== REGISTER (INI YANG TADI HILANG) =====
+  // ===== REGISTER =====
   const register = async (payload) => {
     try {
       setLoading(true);
-
       await api.post("/api/auth/register", payload);
-
       return { ok: true };
     } catch (err) {
       return {
@@ -65,7 +81,6 @@ export function AuthProvider({ children }) {
   // ===== LOGOUT =====
   const logout = () => {
     localStorage.clear();
-    setAuthToken(null);
     setUser(null);
   };
 
@@ -77,6 +92,7 @@ export function AuthProvider({ children }) {
         register,
         logout,
         loading,
+        fetchMe, // Export fetchMe agar bisa dipakai di EditProfile
       }}
     >
       {children}
