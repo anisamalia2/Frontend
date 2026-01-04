@@ -3,18 +3,19 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../utils/api";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { CheckCircle, AlertTriangle, Info } from "lucide-react";
+import { CheckCircle, AlertTriangle } from "lucide-react";
 
 const STATIC_QRIS_URL =
   "https://res.cloudinary.com/do8wvbl0q/image/upload/v1765486219/SCAN_ME_ezdtpa.jpg";
 
 export default function PembayaranSiswa() {
-  const { id } = useParams();
+  const { id } = useParams(); // id ini adalah paket_id
   const navigate = useNavigate();
 
   const [allPaket, setAllPaket] = useState([]);
   const [currentPaket, setCurrentPaket] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false); // State untuk loading tombol
 
   // State QRIS
   const [qrisUrl, setQrisUrl] = useState(STATIC_QRIS_URL);
@@ -24,17 +25,17 @@ export default function PembayaranSiswa() {
       try {
         setLoading(true);
 
-        // 1. Ambil Semua Paket
+        // 1. Ambil Semua Paket (untuk keperluan UI jika dibutuhkan)
         const resAll = await api.get("/api/paket");
         setAllPaket(resAll.data.data || resAll.data);
 
-        // 2. Ambil Detail Paket
+        // 2. Ambil Detail Paket yang dipilih
         if (id) {
           const resCurrent = await api.get(`/api/paket/${id}`);
           const paketData = resCurrent.data.data || resCurrent.data;
           setCurrentPaket(paketData);
 
-          // 3. Cek QRIS Backend
+          // 3. Cek QRIS Backend (Jika ada dynamic QRIS dari paket)
           if (paketData.qris_url) {
             setQrisUrl(paketData.qris_url);
           }
@@ -49,9 +50,57 @@ export default function PembayaranSiswa() {
     fetchData();
   }, [id]);
 
-  const handleSudahBayar = () => {
-    alert("Terima kasih! Pembayaran Anda sedang diverifikasi sistem.");
-    navigate("/dashboard-siswa");
+  const handleSudahBayar = async () => {
+    // 1. Konfirmasi User
+    if (
+      !window.confirm(
+        "Apakah anda yakin sudah melakukan transfer sesuai nominal?"
+      )
+    )
+      return;
+
+    setSubmitting(true);
+    try {
+      // 2. CREATE TRANSACTION
+      // Kita buat transaksi dulu di database
+      const createRes = await api.post("/api/payment/create", {
+        paket_id: id,
+        payment_method: "QRIS",
+      });
+
+      const transactionId = createRes.data.transaction_id;
+
+      // 3. CONFIRM TRANSACTION
+      // Setelah created, kita langsung confirm agar statusnya jadi 'menunggu_verifikasi_admin'
+      await api.post("/api/payment/confirm", {
+        transaction_id: transactionId,
+      });
+
+      alert(
+        "Terima kasih! Pembayaran Anda berhasil dikirim dan sedang diverifikasi sistem."
+      );
+      navigate("/dashboard-siswa");
+    } catch (err) {
+      console.error(err);
+      // Handle error spesifik dari backend
+      const errorMessage =
+        err.response?.data?.message || "Gagal memproses pembayaran.";
+
+      // Jika errornya karena "Selesaikan transaksi sebelumnya", kita arahkan user cek dashboard atau hubungi admin
+      if (
+        err.response?.status === 400 &&
+        errorMessage.includes("Selesaikan transaksi")
+      ) {
+        alert(
+          "Anda memiliki transaksi yang belum selesai. Mohon tunggu verifikasi guru atau hubungi admin."
+        );
+        navigate("/dashboard-siswa");
+      } else {
+        alert(errorMessage);
+      }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading)
@@ -274,9 +323,14 @@ export default function PembayaranSiswa() {
               <div className="pt-4 border-t border-slate-100">
                 <button
                   onClick={handleSudahBayar}
-                  className="w-full bg-[#0b3c65] hover:bg-[#082a46] text-white font-bold text-lg py-5 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
+                  disabled={submitting}
+                  className={`w-full text-white font-bold text-lg py-5 rounded-xl shadow-lg transition-all duration-300 ${
+                    submitting
+                      ? "bg-slate-400 cursor-not-allowed"
+                      : "bg-[#0b3c65] hover:bg-[#082a46] hover:-translate-y-1"
+                  }`}
                 >
-                  Saya Sudah Bayar
+                  {submitting ? "Memproses..." : "Saya Sudah Bayar"}
                 </button>
               </div>
             </div>
